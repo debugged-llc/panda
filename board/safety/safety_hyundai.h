@@ -10,7 +10,8 @@ const CanMsg HYUNDAI_TX_MSGS[] = {{832, 0, 8}, {1265, 0, 4}, {1157, 0, 4}};
 
 // TODO: do checksum checks
 AddrCheckStruct hyundai_rx_checks[] = {
-  {.msg = {{608, 0, 8, .check_checksum = true, .max_counter = 3U, .expected_timestep = 10000U}}},
+  {.msg = {{608, 0, 8, .check_checksum = true, .max_counter = 3U, .expected_timestep = 10000U},
+           {881, 0, 8, .expected_timestep = 10000U}}},
   {.msg = {{897, 0, 8, .max_counter = 255U, .expected_timestep = 10000U}}},
   {.msg = {{902, 0, 8, .max_counter = 15U,  .expected_timestep = 10000U}}},
   {.msg = {{916, 0, 8, .check_checksum = true, .max_counter = 7U, .expected_timestep = 10000U}}},
@@ -102,8 +103,14 @@ static int hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     }
 
     // exit controls on rising edge of gas press
-    if (addr == 608) {
-      bool gas_pressed = (GET_BYTE(to_push, 7) >> 6) != 0;
+    if ((addr == 608) || (addr == 881)) {
+      bool gas_pressed;
+      if (addr == 608) {
+        gas_pressed = (GET_BYTE(to_push, 7) >> 6) != 0;
+      } else {
+        gas_pressed = (((GET_BYTE(to_push, 4) & 0x7F) << 1) | GET_BYTE(to_push, 3) >> 6) != 0;
+      }
+
       if (!unsafe_allow_gas && gas_pressed && !gas_pressed_prev) {
         controls_allowed = 0;
       }
