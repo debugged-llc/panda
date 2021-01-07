@@ -8,7 +8,7 @@ from panda.tests.safety.common import CANPackerPanda
 
 MAX_RATE_UP = 3
 MAX_RATE_DOWN = 7
-MAX_STEER = 255
+MAX_STEER = 384
 
 MAX_RT_DELTA = 112
 RT_INTERVAL = 250000
@@ -189,6 +189,14 @@ class TestHyundaiSafety(common.PandaSafetyTest):
     # do not block resume if we are engaged already
     self.safety.set_controls_allowed(1)
     self.assertTrue(self._tx(self._button_msg(RESUME_BTN)))
+
+
+class TestHyundaiLegacySafety(TestHyundaiSafety):
+  def setUp(self):
+    self.packer = CANPackerPanda("hyundai_kia_generic")
+    self.safety = libpandasafety_py.libpandasafety
+    self.safety.set_safety_hooks(Panda.SAFETY_HYUNDAI_LEGACY, 0)
+    self.safety.init_tests()
 
 
 if __name__ == "__main__":
